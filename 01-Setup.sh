@@ -65,7 +65,7 @@ if [ -x "$(command -v apt)" ]; then
     sudo apt update && sudo apt install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl zip
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
-    sudo dnf install -y axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl zip
+    sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl zip
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
     sudo pacman -Sy --needed archlinux-keyring && sudo pacman -S --needed axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl zip
