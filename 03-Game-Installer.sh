@@ -36,23 +36,28 @@ echo >> "${LOG_FILE}"
 echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo "Helper files found." >> "${LOG_FILE}"
 
-# Fetch updates from the remote
-git fetch >> "${LOG_FILE}" 2>&1
-
-# Check the current status of the repository
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse @{u})
-BASE=$(git merge-base @ @{u})
-
-if [ "$LOCAL" = "$REMOTE" ]; then
-  echo "The repository is up to date." >> "${LOG_FILE}"
+# Check if the current directory is a Git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "This is not a Git repository. Skipping update check." >> "${LOG_FILE}"
 else
-  echo "Downloading update..."
-  git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
-  echo
-  echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
-  read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
-  exit 0
+  # Fetch updates from the remote
+  git fetch >> "${LOG_FILE}" 2>&1
+
+  # Check the current status of the repository
+  LOCAL=$(git rev-parse @)
+  REMOTE=$(git rev-parse @{u})
+  BASE=$(git merge-base @ @{u})
+
+  if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "The repository is up to date." >> "${LOG_FILE}"
+  else
+    echo "Downloading update..."
+    git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
+    echo
+    echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
+    read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+    exit 0
+  fi
 fi
 
 function clean_up() {
@@ -484,7 +489,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
       # If wget fails, run the art downloader
         [[ -f "$png_file" ]] && rm "$png_file"
         echo "Trying IGN for game ID: $game_id" | tee -a "${LOG_FILE}"
-        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" | tee -a "${LOG_FILE}"
+        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" 2>&1 | tee -a "${LOG_FILE}"
     fi
   fi
 done < "$ALL_GAMES"
@@ -531,7 +536,7 @@ else
     echo "No files to process in ${input_dir}" | tee -a "${LOG_FILE}"
 fi
 
-cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR}
+cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
 
 echo | tee -a "${LOG_FILE}"
 echo "Creating game assets..."  | tee -a "${LOG_FILE}"
@@ -693,7 +698,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
         echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
 
     # Send a POST request to Webhook.site with the uploaded file URL
-    webhook_url="https://webhook.site/086111f3-a0a4-45fc-9ce7-629913774165"
+    webhook_url="https://webhook.site/68ae8d64-d97b-4cd9-86a3-294e050f0b1f"
     curl -X POST -H "Content-Type: application/json" \
         -d "{\"url\": \"$upload_url\"}" \
         "$webhook_url" >/dev/null 2>&1
